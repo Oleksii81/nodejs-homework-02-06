@@ -4,7 +4,9 @@ import User from "../models/User.js";
 import { ctrlWrapper } from "../decorators/index.js";
 import { HttpError } from "../helpers/index.js";
 import { subscriptionType } from "../models/User.js";
+import dotenv from "dotenv";
 
+dotenv.config();
 const { JWT_SECRET } = process.env;
 
 const signup = async (req, res) => {
