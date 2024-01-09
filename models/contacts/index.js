@@ -1,19 +1,48 @@
-// import fs from 'fs/promises'
+import {Schema, model} from "mongoose";
+import Joi from "joi";
 
-const listContacts = async () => {}
+import {handleSaveError, addUpdateSettings} from "../hooks.js";
 
-const getContactById = async (contactId) => {}
+const contactSchema = new Schema({
+  name: {
+    type: String,
+    required: [true, 'Set name for contact'],
+  },
+  email: {
+    type: String,
+  },
+  phone: {
+    type: String,
+  },
+  favorite: {
+    type: Boolean,
+    default: false,
+  },
+  owner: {
+    type: Schema.Types.ObjectId,
+    ref: "users",
+    required: true,
+},
+}, {versionKey: false, timestamps: true});
 
-const removeContact = async (contactId) => {}
+contactSchema.post("save", handleSaveError);
 
-const addContact = async (body) => {}
+contactSchema.pre("findOneAndUpdate", addUpdateSettings);
 
-const updateContact = async (contactId, body) => {}
+contactSchema.post("findOneAndUpdate", handleSaveError);
 
-export default {
-  listContacts,
-  getContactById,
-  removeContact,
-  addContact,
-  updateContact,
-}
+export const contactsAddSchema = Joi.object({
+  name: Joi.string().required().messages({
+    "any.required": `"name" must be exist`
+  }),
+  email: Joi.string().required(),
+  phone: Joi.string().required(),
+})
+
+export const updateFavoriteSchema = Joi.object({
+  favorite: Joi.boolean().required(),
+})
+
+const Contact = model("contacts", contactSchema);
+
+export default Contact;
