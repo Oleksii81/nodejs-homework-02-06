@@ -1,6 +1,10 @@
+import fs from "fs/promises";
+import path from "path";
 import Contact from "../models/contacts/index.js";
 import { HttpError } from "../helpers/index.js";
 import { ctrlWrapper } from "../decorators/index.js";
+
+const avatarPath = path.resolve("public", "avatars");
 
 const getAllContacts = async (req, res) => {
         const {_id: owner} = req.user;
@@ -34,7 +38,12 @@ const deleteById = async (req, res, next) => {
 
 const add = async (req, res) => { 
         const {_id: owner} = req.user;
-        const result = await Contact.create({...req.body, owner});
+        const avatarPath = path.resolve("public", "avatars");
+        const { path: tempDir, originalname } = req.file;
+        const uploadResult = path.join(avatarPath, originalname);
+        await fs.rename(tempDir, uploadResult);
+        const avatar = path.join("avatars", originalname);
+        const result = await Contact.create({...req.body, owner, avatar,});
 
         res.status(201).json(result)
 }
@@ -51,7 +60,7 @@ const updateById = async (req, res) => {
 
 const updateFavoriteById = async (req, res) => {
     const { id } = req.params;
-    const existingContact = await Contact.findByIdAndUpdate(id);
+    const existingContact = await Contact.findByIdAndUpdate({id, owner});
     if (!existingContact) {
       throw HttpError(404, "Contact was not found");
     }
